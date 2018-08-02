@@ -1,0 +1,9 @@
+main:
+    server_name: "mockup"
+
+listen:
+    - http::8000
+    - https::443
+
+session:
+    timeout: 600

@@ -1,4 +1,4 @@
-FROM golang:1.9 AS builder
+FROM golang:latest AS builder
 
 # Download and install the latest release of dep
 #ADD https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 /usr/bin/dep
@@ -10,17 +10,16 @@ FROM golang:1.9 AS builder
 #RUN dep ensure --vendor-only
 
 # copy source tree in
-COPY . ./
+RUN mkdir -p /go/src/github.com/superchalupa/go-redfish
+COPY . /go/src/github.com/superchalupa/go-redfish/.
 
 # create a self-contained build structure
-RUN rmdir src; \
-     ln -s . src ;\
-     ln -s . github.com  ;\
-     ln -s . superchalupa    ;\
-     ln -s . go-redfish     ;\
-    GOPATH=$PWD CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -o /app -tags simulation github.com/superchalupa/go-redfish/cmd/ocp-server
+RUN GOPATH=$PWD CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -o /app -tags simulation github.com/superchalupa/go-redfish/cmd/ec-redfish
 
 FROM scratch
-COPY --from=builder /go/v1 /app  /
+COPY --from=builder /go/src/github.com/superchalupa/go-redfish/mockup.yaml   /redfish.yaml
+COPY --from=builder /go/src/github.com/superchalupa/go-redfish/mockup-logging.yaml  /redfish-logging.yaml
+COPY --from=builder /app  /
 EXPOSE 443
+EXPOSE 8000
 ENTRYPOINT ["/app"]
